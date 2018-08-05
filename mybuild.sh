@@ -3,7 +3,7 @@
 
 CCACHE=$(command -v ccache)
 
-TOOLCHAIN=/home/sayan7848/aarch64-linux-android/bin/aarch64-opt-linux-android-
+#TOOLCHAIN=/home/sayan7848/aarch64-linux-android/bin/aarch64-opt-linux-android-
 
 OUT=$(pwd)/out
 
@@ -11,9 +11,9 @@ TARGET=$OUT/arch/arm64/boot/
 
 JOBCOUNT="-j$(grep -c ^processor /proc/cpuinfo)"
 
-export CROSS_COMPILE="${CCACHE} ${TOOLCHAIN}"
-
-export ARCH=arm64
+#export CROSS_COMPILE="${CCACHE} ${TOOLCHAIN}"
+#
+#export ARCH=arm64
 
 export KBUILD_BUILD_USER=TheHungarianHorntail
 
@@ -24,7 +24,8 @@ make clean O=$OUT
 make mrproper O=$OUT
 
 echo "Preparing kernel config"
-make mido_defconfig O=$OUT
+make O=out ARCH=arm64 mido_defconfig
+#make mido_defconfig O=$OUT
 status=$?
 if [ $status != 0 ]; then
 	echo "You don't have a valid config for your device, code $status"
@@ -32,7 +33,12 @@ if [ $status != 0 ]; then
 fi
 
 echo "Compiling Kernel"
-make $JOBCOUNT O=$OUT
+#make $JOBCOUNT O=$OUT
+make -j$(nproc --all) O=$OUT \
+                      ARCH=arm64 \
+                      CC="/home/sayan7848/linux-x86/clang-r328903/bin/clang" \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE="/home/sayan7848/aarch64-linux-android-4.9/bin/aarch64-linux-android-"
 status=$?
 if [ $status != 0 ]; then
 	echo "Building interrupted, code $status"
