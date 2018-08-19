@@ -31,7 +31,7 @@
 #include <linux/kthread.h>
 #include <linux/slab.h>
 #include <linux/kernel_stat.h>
-#include <linux/display_state.h>
+#include <linux/state_notifier.h>
 #include <asm/cputime.h>
 
 #define CREATE_TRACE_POINTS
@@ -59,7 +59,7 @@ struct cpufreq_electron_policyinfo {
 	bool reject_notification;
 	int governor_enabled;
 	struct cpufreq_electron_tunables *cached_tunables;
-	unsigned long *cpu_busy_times;
+	struct sched_load *sl;
 };
 
 /* Protected by per-policy load_lock */
@@ -93,7 +93,7 @@ static unsigned int default_target_loads[] = {DEFAULT_TARGET_LOAD};
 #define DEFAULT_ABOVE_HISPEED_DELAY DEFAULT_TIMER_RATE
 static unsigned int default_above_hispeed_delay[] = {
 	DEFAULT_ABOVE_HISPEED_DELAY };
-#define DEFAULT_SCREEN_OFF_MAX 1689600
+#define DEFAULT_SCREEN_OFF_MAX 1555200
 
 struct cpufreq_electron_tunables {
 	int usage_count;
@@ -438,9 +438,9 @@ static void cpufreq_electron_timer(unsigned long data)
 	unsigned long flags;
 	unsigned long max_cpu;
 	int i, fcpu;
+        struct sched_load *sl;
 	struct cpufreq_govinfo govinfo;
 	unsigned int this_hispeed_freq;
-	bool display_on = is_display_on();
 
 	if (!down_read_trylock(&ppol->enable_sem))
 		return;
@@ -454,10 +454,10 @@ static void cpufreq_electron_timer(unsigned long data)
 	spin_lock_irqsave(&ppol->load_lock, flags);
 	ppol->last_evaluated_jiffy = get_jiffies_64();
 
-	if (display_on
+	if (!state_suspended
 		&& tunables->timer_rate != tunables->prev_timer_rate)
 		tunables->timer_rate = tunables->prev_timer_rate;
-	else if (!display_on
+	else if (state_suspended
 		&& tunables->timer_rate != SCREEN_OFF_TIMER_RATE) {
 		tunables->prev_timer_rate = tunables->timer_rate;
 		tunables->timer_rate
@@ -466,14 +466,14 @@ static void cpufreq_electron_timer(unsigned long data)
 	}
 
 	if (tunables->use_sched_load)
-		sched_get_cpus_busy(ppol->cpu_busy_times,
-				    ppol->policy->related_cpus);
+		sched_get_cpus_busy(ppol->sl, ppol->policy->related_cpus);
 	max_cpu = cpumask_first(ppol->policy->cpus);
 	for_each_cpu(i, ppol->policy->cpus) {
 		pcpu = &per_cpu(cpuinfo, i);
+                sl = &ppol->sl[i - fcpu];
 		if (tunables->use_sched_load) {
-			cputime_speedadj = (u64)ppol->cpu_busy_times[i - fcpu]
-					* ppol->policy->cpuinfo.max_freq;
+			cputime_speedadj = (u64)sl->prev_load *
+					   ppol->policy->cpuinfo.max_freq;
 			do_div(cputime_speedadj, tunables->timer_rate);
 		} else {
 			now = update_load(i);
@@ -514,7 +514,7 @@ static void cpufreq_electron_timer(unsigned long data)
 
 	spin_lock_irqsave(&ppol->target_freq_lock, flags);
 	cpu_load = loadadjfreq / ppol->policy->cur;
-	tunables->boosted = (tunables->boost_val || now < tunables->boostpulse_endtime) && display_on;
+	tunables->boosted = (tunables->boost_val || now < tunables->boostpulse_endtime) && !state_suspended;
 	this_hispeed_freq = max(tunables->hispeed_freq, ppol->policy->min);
 	this_hispeed_freq = min(this_hispeed_freq, ppol->policy->max);
 
@@ -633,7 +633,6 @@ static int cpufreq_electron_speedchange_task(void *data)
 	unsigned long flags;
 	struct cpufreq_electron_policyinfo *ppol;
 	struct cpufreq_electron_tunables *tunables;
-	bool display_on = is_display_on();
 
 	while (1) {
 		set_current_state(TASK_INTERRUPTIBLE);
@@ -664,11 +663,11 @@ static int cpufreq_electron_speedchange_task(void *data)
 				up_read(&ppol->enable_sem);
 				continue;
 			}
-			if (unlikely(!display_on))
+			if (unlikely(state_suspended))
 				if (ppol->target_freq > tunables->screen_off_maxfreq)
 					ppol->target_freq = tunables->screen_off_maxfreq;
 			if (ppol->target_freq != ppol->policy->cur) {
-				if (tunables->powersave_bias || !display_on)
+				if (tunables->powersave_bias || state_suspended)
 					__cpufreq_driver_target(ppol->policy,
 								ppol->target_freq,
 								CPUFREQ_RELATION_C);
@@ -1548,7 +1547,7 @@ static struct cpufreq_electron_policyinfo *get_policyinfo(
 	struct cpufreq_electron_policyinfo *ppol =
 				per_cpu(polinfo, policy->cpu);
 	int i;
-	unsigned long *busy;
+	struct sched_load *sl;
 
 	/* polinfo already allocated for policy, return */
 	if (ppol)
@@ -1558,13 +1557,13 @@ static struct cpufreq_electron_policyinfo *get_policyinfo(
 	if (!ppol)
 		return ERR_PTR(-ENOMEM);
 
-	busy = kcalloc(cpumask_weight(policy->related_cpus), sizeof(*busy),
-		       GFP_KERNEL);
-	if (!busy) {
+	sl = kcalloc(cpumask_weight(policy->related_cpus), sizeof(*sl),
+                     GFP_KERNEL);
+	if (!sl) {
 		kfree(ppol);
 		return ERR_PTR(-ENOMEM);
 	}
-	ppol->cpu_busy_times = busy;
+	ppol->sl = sl;
 
 	init_timer_deferrable(&ppol->policy_timer);
 	ppol->policy_timer.function = cpufreq_electron_timer;
@@ -1592,7 +1591,7 @@ static void free_policyinfo(int cpu)
 		if (per_cpu(polinfo, j) == ppol)
 			per_cpu(polinfo, cpu) = NULL;
 	kfree(ppol->cached_tunables);
-	kfree(ppol->cpu_busy_times);
+	kfree(ppol->sl);
 	kfree(ppol);
 }
 
