@@ -99,7 +99,6 @@ x509.genkey
 # Kconfig presets
 all.config
 
-# AnyKernel outputs
-AnyKernel/*.zip
-AnyKernel/*dtb
-
+*.log
+*dtb
+*.zip
