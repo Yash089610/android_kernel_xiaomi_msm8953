@@ -263,6 +263,7 @@ static void do_input_boost_s2(struct work_struct *work)
 
 	/* Set the input_boost_min for all CPUs in the system */
 	pr_debug("Step 2: Setting input boost min for all CPUs\n");
+
 	for_each_possible_cpu(i) {
 		i_sync_info = &per_cpu(sync_info, i);
 		i_sync_info->input_boost_min = i_sync_info->input_boost_freq_s2;
@@ -279,7 +280,9 @@ void do_input_boost_max()
 {
 	unsigned int i;
 	struct cpu_sync *i_sync_info;
- 	cancel_delayed_work_sync(&input_boost_rem);
+ 	if (!cpu_boost_worker_thread)
+		return;
+    cancel_delayed_work_sync(&input_boost_rem);
  	for_each_possible_cpu(i) {
 		i_sync_info = &per_cpu(sync_info, i);
 		i_sync_info->input_boost_min = UINT_MAX;
