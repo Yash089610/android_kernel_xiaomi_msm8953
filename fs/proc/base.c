@@ -1858,6 +1858,7 @@ static int dname_to_vma_addr(struct dentry *dentry,
 		return -EINVAL;
 	if (sval != (unsigned long)sval)
 		return -EINVAL;
+
 	str += len;
 
 	if (*str != '-')
