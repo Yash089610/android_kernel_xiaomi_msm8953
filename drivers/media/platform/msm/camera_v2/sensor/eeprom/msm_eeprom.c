@@ -1008,8 +1008,8 @@ static int msm_eeprom_i2c_probe(struct i2c_client *client,
 		pr_err("%s failed %d\n", __func__, __LINE__);
 		e_ctrl->userspace_probe = 1;
 	}
-
-	rc = msm_eeprom_get_dt_data(e_ctrl);
+	
+    rc = msm_eeprom_get_dt_data(e_ctrl);
 	if (rc < 0)
 		goto board_free;
 

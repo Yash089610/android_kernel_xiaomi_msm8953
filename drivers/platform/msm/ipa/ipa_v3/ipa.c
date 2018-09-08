@@ -2584,6 +2584,9 @@ void ipa3_q6_pre_shutdown_cleanup(void)
 
 	ipa3_q6_pipe_delay(true);
 	ipa3_q6_avoid_holb();
+	if (ipa3_ctx->ipa_config_is_mhi)
+		ipa3_set_reset_client_cons_pipe_sus_holb(true,
+		IPA_CLIENT_MHI_CONS);
 	if (ipa3_q6_clean_q6_tables()) {
 		IPAERR("Failed to clean Q6 tables\n");
 		BUG();
@@ -2596,6 +2599,11 @@ void ipa3_q6_pre_shutdown_cleanup(void)
 	  * on pipe reset procedure
 	  */
 	ipa3_q6_pipe_delay(false);
+	ipa3_set_reset_client_prod_pipe_delay(true,
+		IPA_CLIENT_USB_PROD);
+	if (ipa3_ctx->ipa_config_is_mhi)
+		ipa3_set_reset_client_prod_pipe_delay(true,
+		IPA_CLIENT_MHI_PROD);
 
 	ipa3_set_usb_prod_pipe_delay();
 
