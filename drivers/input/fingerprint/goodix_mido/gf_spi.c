@@ -414,8 +414,10 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	char temp = GF_NET_EVENT_IRQ;
 	gf_dbg("enter irq %s\n", __func__);
 
-	wake_lock_timeout(&gf_dev->ttw_wl, msecs_to_jiffies(1000));
-
+	if (gf_dev->fb_black) {
+	wake_lock_timeout(&gf_dev->ttw_wl, msecs_to_jiffies(15));
+	}
+	
 	sendnlmsg(&temp);
 #elif defined (GF_FASYNC)
 
@@ -533,11 +535,7 @@ static int gf_release(struct inode *inode, struct file *filp)
 
 		gf_dbg("disble_irq. irq = %d\n", gf_dev->irq);
 		gf_disable_irq(gf_dev);
-
-
 		devm_free_irq(&gf_dev->spi->dev, gf_dev->irq, gf_dev);
-
-
 
 		/*power off the sensor*/
 		gf_dev->device_available = 0;
@@ -804,9 +802,6 @@ static struct platform_driver gf_driver = {
 	.driver = {
 		   .name = GF_DEV_NAME,
 		   .owner = THIS_MODULE,
-#if defined(USE_SPI_BUS)
-
-#endif
 		   .of_match_table = gx_match_table,
 		   },
 	.probe = gf_probe,
