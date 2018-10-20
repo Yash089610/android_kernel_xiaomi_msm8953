@@ -5,12 +5,12 @@
 #include <linux/notifier.h>
 #include <linux/wakelock.h>
 /**********************************************************/
-enum FP_MODE{
-	GF_IMAGE_MODE = 0,
+enum FP_MODE {
+	GF_IMAGE_MODE	= 0,
 	GF_KEY_MODE,
 	GF_SLEEP_MODE,
 	GF_FF_MODE,
-	GF_DEBUG_MODE = 0x56
+	GF_DEBUG_MODE	= 0x56
 };
 
 struct gf_key {
@@ -20,13 +20,13 @@ struct gf_key {
 
 
 struct gf_key_map {
-    char *name;
-    unsigned short val;
+	char *name;
+	unsigned short val;
 };
 
 #define  GF_IOC_MAGIC         'G'
-#define  GF_IOC_DISABLE_IRQ	_IO(GF_IOC_MAGIC, 0)
-#define  GF_IOC_ENABLE_IRQ	_IO(GF_IOC_MAGIC, 1)
+#define  GF_IOC_DISABLE_IRQ     _IO(GF_IOC_MAGIC, 0)
+#define  GF_IOC_ENABLE_IRQ      _IO(GF_IOC_MAGIC, 1)
 #define  GF_IOC_SETSPEED    _IOW(GF_IOC_MAGIC, 2, unsigned int)
 #define  GF_IOC_RESET       _IO(GF_IOC_MAGIC, 3)
 #define  GF_IOC_COOLBOOT    _IO(GF_IOC_MAGIC, 4)
