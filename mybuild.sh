@@ -53,21 +53,23 @@ while true ; do
 done
 
 # print set options
-echo "****Configured options****
-workdir=$wd 
-toolchain=$tc 
-modifier=$mod 
-out=$out 
-fresh=$fresh 
-boot=$boot 
-jobcount=$jc 
-user=$user
-host=$host
-log=$log
-clang-triple=$ct
-clang_compile=$cc "
+echo
+echo "Configured options
+workdir = $wd 
+toolchain = $tc 
+modifier = $mod 
+out = $out 
+fresh = $fresh 
+boot = $boot 
+jobcount = $jc 
+user = $user
+host = $host
+log = $log
+clang-triple = $ct
+clang_compile = $cc "
+echo
 
-# set user and host
+## Set user and host
 export KBUILD_BUILD_USER=$user
 export KBUILD_BUILD_HOST=$host
 
@@ -81,6 +83,7 @@ if [ $fresh = "true" ]; then
 	echo "Cleaning up"
 	make clean O=$out
 	make mrproper O=$out
+    echo
 fi
 
 # compile
@@ -89,10 +92,11 @@ make O=out ARCH=arm64 mido_defconfig |& tee -a $log
 status=$?
 if [ $status != 0 ]; then
 	echo "You don't have a valid config for your device, code $status"
-	exit $status
+    exit $status
 fi
-
+echo
 echo "Compiling Kernel and making zip"
+echo
 if [ "$mod" = "clang" ]; then
     make -$jc ARCH=arm64 O=$out CROSS_COMPILE=$tc CC=$cc CLANG_TRIPLE=$ct |& tee -a $log
 else
@@ -103,6 +107,8 @@ if [ $status != 0 ]; then
 	echo "Building interrupted, code $status"
 	exit $status
 else
+    # make zip
+    echo
     echo "Making Flashable Zip"
     image=$boot/Image.gz-dtb
     suffix=$(date +%Y%m%d-%H%M%S)
@@ -113,9 +119,10 @@ else
     cp $image $srelease
     cp $image $nsrelease
     cd $srelease
-    zip -r9 NinthHorcrux-$suffix.zip *
+    zip -r9 NinthHorcrux-Spectrum-$suffix.zip *
     cd $nsrelease
-    zip -r9 NinthHorcrux-$suffix.zip *
+    zip -r9 NinthHorcrux-NoSpcectrum-$suffix.zip *
     cd $wd
     echo "Flashable zip made"
+    echo
 fi
