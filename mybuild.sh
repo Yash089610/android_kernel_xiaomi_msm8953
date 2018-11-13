@@ -4,7 +4,7 @@
 
 # set defaults
 wd=$(pwd)
-tc="/home/sayans7848/aarch64-linux-android-4.9/bin/aarch64-linux-android-"
+tc="$HOME/aarch64-linux-android-4.9/bin/aarch64-linux-android-"
 mod=""
 out=$wd/out
 fresh="true"
@@ -14,7 +14,7 @@ user="THHT"
 host="butterbeer"
 log=""
 ct="aarch64-linux-gnu-"
-cc="/home/sayans7848/linux-x86/clang-r328903/bin/clang"
+cc="$HOME/linux-x86/clang-r328903/bin/clang"
 
 # read the options
 TEMP=`getopt -o w:t:m:o:f:b:j:u:h:l:t:c --long workdir:,toolchain:,modifier:,out:,fresh:,boot:,jobcount:,user:,host:,log:,clang_triple:,clang_compile: -- "$@"`
