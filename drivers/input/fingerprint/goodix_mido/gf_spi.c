@@ -1,24 +1,24 @@
-/*Simple synchronous userspace interface to SPI devices
- *
- * Copyright (C) 2006 SWAPP
- *     Andrea Paterniani <a.paterniani@swapp-eng.it>
- * Copyright (C) 2007 David Brownell (simplification, cleanup)
- * Copyright (C) 2017 XiaoMi, Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
+ /*Simple synchronous userspace interface to SPI devices
+  *
+  * Copyright (C) 2006 SWAPP
+  *     Andrea Paterniani <a.paterniani@swapp-eng.it>
+  * Copyright (C) 2007 David Brownell (simplification, cleanup)
+  * Copyright (C) 2017 XiaoMi, Inc.
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License as published by
+  * the Free Software Foundation; either version 2 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU General Public License for more details.
+  *
+  * You should have received a copy of the GNU General Public License
+  * along with this program; if not, write to the Free Software
+  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+  */
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/ioctl.h>
@@ -58,26 +58,26 @@
 #define GF_SPIDEV_NAME     "goodix,fingerprint"
 /*device name after register in charater*/
 #define GF_DEV_NAME            "goodix_fp"
-#define GF_INPUT_NAME       "gf3208"    /*"goodix_fp" */
+#define	GF_INPUT_NAME	    "gf3208"	/*"goodix_fp" */
 
-#define CHRD_DRIVER_NAME        "goodix_fp_spi"
-#define CLASS_NAME                  "goodix_fp"
-#define SPIDEV_MAJOR            225     /* assigned */
-#define N_SPI_MINORS            32      /* ... up to 256 */
+#define	CHRD_DRIVER_NAME	"goodix_fp_spi"
+#define	CLASS_NAME		    "goodix_fp"
+#define SPIDEV_MAJOR		225	/* assigned */
+#define N_SPI_MINORS		32	/* ... up to 256 */
 
 
 struct gf_key_map key_map[] = {
-	{  "POWER",  KEY_POWER	 },
-	{  "HOME",   KEY_HOME	 },
-	{  "MENU",   KEY_MENU	 },
-	{  "BACK",   KEY_BACK	 },
-	{  "UP",     KEY_UP	 },
-	{  "DOWN",   KEY_DOWN	 },
-	{  "LEFT",   KEY_LEFT	 },
-	{  "RIGHT",  KEY_RIGHT	 },
-	{  "FORCE",  KEY_F9	 },
-	{  "CLICK",  KEY_F19	 },
-	{  "CAMERA", KEY_CAMERA	 },
+	  {  "POWER",  KEY_POWER  },
+	  {  "HOME" ,  KEY_HOME   },
+	  {  "MENU" ,  KEY_MENU   },
+	  {  "BACK" ,  KEY_BACK   },
+	  {  "UP"   ,  KEY_UP     },
+	  {  "DOWN" ,  KEY_DOWN   },
+	  {  "LEFT" ,  KEY_LEFT   },
+	  {  "RIGHT",  KEY_RIGHT  },
+	  {  "FORCE",  KEY_F9     },
+	  {  "CLICK",  KEY_F19    },
+	  {  "CAMERA", KEY_CAMERA },
 };
 
 /**************************debug******************************/
@@ -85,13 +85,13 @@ struct gf_key_map key_map[] = {
 #undef  GF_DEBUG
 
 #ifdef GF_DEBUG
-#define gf_dbg(fmt, args ...) do { \
-		pr_warn("gf:" fmt, ## args); \
-} while (0)
+#define gf_dbg(fmt, args...) do { \
+					pr_warn("gf:" fmt, ##args);\
+		} while (0)
 #define FUNC_ENTRY()  pr_warn("gf:%s, entry\n", __func__)
 #define FUNC_EXIT()  pr_warn("gf:%s, exit\n", __func__)
 #else
-#define gf_dbg(fmt, args ...)
+#define gf_dbg(fmt, args...)
 #define FUNC_ENTRY()
 #define FUNC_EXIT()
 #endif
@@ -107,9 +107,9 @@ static int driver_init_partial(struct gf_dev *gf_dev);
 
 static void gf_enable_irq(struct gf_dev *gf_dev)
 {
-	if (gf_dev->irq_enabled)
+	if (gf_dev->irq_enabled) {
 		pr_warn("IRQ has been enabled.\n");
-	else {
+	} else {
 		enable_irq(gf_dev->irq);
 		gf_dev->irq_enabled = 1;
 	}
@@ -120,8 +120,9 @@ static void gf_disable_irq(struct gf_dev *gf_dev)
 	if (gf_dev->irq_enabled) {
 		gf_dev->irq_enabled = 0;
 		disable_irq(gf_dev->irq);
-	} else
+	} else {
 		pr_warn("IRQ has been disabled.\n");
+	}
 }
 
 #ifdef AP_CONTROL_CLK
@@ -155,7 +156,7 @@ static long spi_clk_max_rate(struct clk *clk, unsigned long rate)
 		 * direction with half the step size
 		 */
 		if (((cur > rate) && (step_direction > 0))
-		    || ((cur < rate) && (step_direction < 0))) {
+			 || ((cur < rate) && (step_direction < 0))) {
 			step_direction = -step_direction;
 			step_size >>= 1;
 		}
@@ -265,8 +266,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	struct gf_dev *gf_dev = &gf;
 	struct gf_key gf_key = { 0 };
 	int retval = 0;
-	int i;
-
+		int i;
 #ifdef AP_CONTROL_CLK
 	unsigned int speed = 0;
 #endif
@@ -276,11 +276,11 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 	if (_IOC_DIR(cmd) & _IOC_READ)
 		retval =
-			!access_ok(VERIFY_WRITE, (void __user*)arg,
-				   _IOC_SIZE(cmd));
+			 !access_ok(VERIFY_WRITE, (void __user *)arg,
+			 _IOC_SIZE(cmd));
 	if ((retval == 0) && (_IOC_DIR(cmd) & _IOC_WRITE))
 		retval =
-			!access_ok(VERIFY_READ, (void __user*)arg, _IOC_SIZE(cmd));
+			 !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd));
 	if (retval)
 		return -EFAULT;
 
@@ -308,15 +308,16 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	case GF_IOC_SETSPEED:
 #ifdef AP_CONTROL_CLK
-		retval = __get_user(speed, (u32 __user*)arg);
+		retval = __get_user(speed, (u32 __user *) arg);
 		if (retval == 0) {
-			if (speed > 8 * 1000 * 1000)
-				pr_warn("Set speed:%d is larger than 8Mbps.\n", speed);
-			else
+			if (speed > 8 * 1000 * 1000) {
+				pr_warn("Set speed:%d is larger than 8Mbps.\n",	speed);
+			} else {
 				spi_clock_set(gf_dev, speed);
-		} else
-			pr_warn("Failed to get speed from user. retval = %d\n", retval);
-
+			}
+		} else {
+			pr_warn("Failed to get speed from user. retval = %d\n",	retval);
+		}
 #else
 		pr_info("This kernel doesn't support control clk in AP\n");
 #endif
@@ -331,7 +332,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	case GF_IOC_SENDKEY:
 		if (copy_from_user
-			    (&gf_key, (struct gf_key *)arg, sizeof(struct gf_key))) {
+			 (&gf_key, (struct gf_key *)arg, sizeof(struct gf_key))) {
 			pr_warn("Failed to copy data from user space.\n");
 			retval = -EFAULT;
 			break;
@@ -371,7 +372,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 		break;
 	case GF_IOC_PM_FBCABCK:
-		__put_user(gf_dev->fb_black, (u8 __user*)arg);
+		__put_user(gf_dev->fb_black, (u8 __user *) arg);
 		break;
 	case GF_IOC_POWER_ON:
 		if (gf_dev->device_available == 1)
@@ -413,9 +414,10 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	char temp = GF_NET_EVENT_IRQ;
 	gf_dbg("enter irq %s\n", __func__);
 
-	if (gf_dev->fb_black)
-		wake_lock_timeout(&gf_dev->ttw_wl, msecs_to_jiffies(15));
-
+	if (gf_dev->fb_black) {
+	wake_lock_timeout(&gf_dev->ttw_wl, msecs_to_jiffies(15));
+	}
+	
 	sendnlmsg(&temp);
 #elif defined (GF_FASYNC)
 
@@ -431,7 +433,6 @@ static irqreturn_t gf_irq(int irq, void *handle)
 static int driver_init_partial(struct gf_dev *gf_dev)
 {
 	int ret = 0;
-
 	FUNC_ENTRY();
 	pr_warn("--------driver_init_partial start.--------\n");
 
@@ -441,11 +442,9 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 		goto error;
 
 	gf_dev->irq = gf_irq_num(gf_dev);
-	ret = devm_request_threaded_irq(&gf_dev->spi->dev,
-					gf_dev->irq,
-					NULL,
+	ret = devm_request_threaded_irq(&gf_dev->spi->dev, gf_dev->irq, NULL,
 					gf_irq,
-					IRQF_TRIGGER_RISING | IRQF_ONESHOT,
+					IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
 					"gf", gf_dev);
 	if (ret) {
 		pr_err("Could not request irq %d\n", gpio_to_irq(gf_dev->irq_gpio));
@@ -493,11 +492,11 @@ static int gf_open(struct inode *inode, struct file *filp)
 			filp->private_data = gf_dev;
 			nonseekable_open(inode, filp);
 			gf_dbg("Succeed to open device. irq = %d\n",
-			       gf_dev->irq);
-			/*power the sensor*/
-			gf_dev->device_available = 1;
+							gf_dev->irq);
+				/*power the sensor*/
+				 gf_dev->device_available = 1;
 		}
-	} else
+	} else {
 		gf_dbg("No device for minor %d\n", iminor(inode));
 	}
 	mutex_unlock(&device_list_lock);
@@ -547,32 +546,31 @@ static int gf_release(struct inode *inode, struct file *filp)
 }
 
 static const struct file_operations gf_fops = {
-	.owner		= THIS_MODULE,
+	.owner = THIS_MODULE,
 	/* REVISIT switch to aio primitives, so that userspace
 	 * gets more complete API coverage.  It'll simplify things
 	 * too, except for the locking.
 	 */
 	.unlocked_ioctl = gf_ioctl,
 #ifdef CONFIG_COMPAT
-	.compat_ioctl	= gf_compat_ioctl,
+	.compat_ioctl = gf_compat_ioctl,
 #endif /*CONFIG_COMPAT*/
-	.open		= gf_open,
-	.release	= gf_release,
+	.open = gf_open,
+	.release = gf_release,
 #ifdef GF_FASYNC
-	.fasync		= gf_fasync,
+	.fasync = gf_fasync,
 #endif
 };
 
 static void fb_state_worker(struct work_struct *work)
 {
 	struct gf_dev *gf_dev = container_of(work, typeof(*gf_dev), fb_work);
-
 	if (!gf_dev->device_available)
 		return;
  #if defined(GF_NETLINK_ENABLE)
 	{
 		char temp = gf_dev->fb_black ?
-			    GF_NET_EVENT_FB_BLACK : GF_NET_EVENT_FB_UNBLACK;
+			GF_NET_EVENT_FB_BLACK : GF_NET_EVENT_FB_UNBLACK;
 		sendnlmsg(&temp);
 	}
 #elif defined(GF_FASYNC)
@@ -591,20 +589,20 @@ static int goodix_fb_state_chg_callback(struct notifier_block *nb,
 	if (val != FB_EARLY_EVENT_BLANK)
 		return 0;
 	switch (*blank) {
-	case FB_BLANK_POWERDOWN:
-		gf_dev->fb_black = 1;
-		schedule_work(&gf_dev->fb_work);
+		case FB_BLANK_POWERDOWN:
+			gf_dev->fb_black = 1;
+			schedule_work(&gf_dev->fb_work);
 		break;
-	case FB_BLANK_UNBLANK:
-		gf_dev->fb_black = 0;
-		schedule_work(&gf_dev->fb_work);
+		case FB_BLANK_UNBLANK:
+			gf_dev->fb_black = 0;
+			schedule_work(&gf_dev->fb_work);
 		break;
 	}
 	return NOTIFY_OK;
 }
 
 static struct notifier_block goodix_noti_block = {
-	.notifier_call	= goodix_fb_state_chg_callback,
+	.notifier_call = goodix_fb_state_chg_callback,
 };
 
 static void gf_reg_key_kernel(struct gf_dev *gf_dev)
@@ -612,8 +610,9 @@ static void gf_reg_key_kernel(struct gf_dev *gf_dev)
 	int i;
 
 	set_bit(EV_KEY, gf_dev->input->evbit);
-	for (i = 0; i < ARRAY_SIZE(key_map); i++)
+	for (i = 0; i < ARRAY_SIZE(key_map); i++) {
 		set_bit(key_map[i].val, gf_dev->input->keybit);
+	}
 	set_bit(KEY_SELECT, gf_dev->input->keybit);
 	gf_dev->input->name = GF_INPUT_NAME;
 	if (input_register_device(gf_dev->input))
@@ -643,11 +642,11 @@ static int gf_probe(struct platform_device *pdev)
 	gf_dev->spi = pdev;
 #endif
 
-	gf_dev->irq_gpio =       -EINVAL;
-	gf_dev->reset_gpio =       -EINVAL;
-	gf_dev->pwr_gpio =       -EINVAL;
+	gf_dev->irq_gpio 		= 	-EINVAL;
+	gf_dev->reset_gpio 	= 	-EINVAL;
+	gf_dev->pwr_gpio 	= 	-EINVAL;
 	gf_dev->device_available =  0;
-	gf_dev->fb_black =  0;
+	gf_dev->fb_black  =  0;
 	gf_dev->irq_enabled = 0;
 	gf_dev->fingerprint_pinctrl = NULL;
 
@@ -671,7 +670,7 @@ static int gf_probe(struct platform_device *pdev)
 	if (status == 0) {
 		set_bit(minor, minors);
 		list_add(&gf_dev->device_entry, &device_list);
-	} else
+	} else {
 		gf_dev->devt = 0;
 	}
 	mutex_unlock(&device_list_lock);
@@ -695,7 +694,7 @@ static int gf_probe(struct platform_device *pdev)
 		if (gfspi_ioctl_clk_enable(gf_dev))
 			goto gfspi_probe_clk_enable_failed;
 
-		spi_clock_set(gf_dev, 4.8 * 1000 * 1000);
+		spi_clock_set(gf_dev, 4.8*1000*1000);
 #endif
 
 		INIT_WORK(&gf_dev->fb_work, fb_state_worker);
@@ -740,7 +739,6 @@ static int gf_remove(struct platform_device *pdev)
 #endif
 {
 	struct gf_dev *gf_dev = &gf;
-
 	FUNC_ENTRY();
 
 	/* make sure ops on existing fds can abort cleanly */
@@ -789,7 +787,7 @@ static int gf_resume(struct platform_device *pdev)
 }
 
 static struct of_device_id gx_match_table[] = {
-	{ .compatible = GF_SPIDEV_NAME, },
+	{.compatible = GF_SPIDEV_NAME,},
 	{},
 };
 
@@ -798,21 +796,20 @@ static struct spi_driver gf_driver = {
 #elif defined(USE_PLATFORM_BUS)
 static struct platform_driver gf_driver = {
 #endif
-	.driver			= {
-		.name		= GF_DEV_NAME,
-		.owner		= THIS_MODULE,
-		.of_match_table = gx_match_table,
-	},
-	.probe			= gf_probe,
-	.remove			= gf_remove,
-	.suspend		= gf_suspend,
-	.resume			= gf_resume,
+	.driver = {
+		   .name = GF_DEV_NAME,
+		   .owner = THIS_MODULE,
+		   .of_match_table = gx_match_table,
+		   },
+	.probe = gf_probe,
+	.remove = gf_remove,
+	.suspend = gf_suspend,
+	.resume = gf_resume,
 };
 
 static int __init gf_init(void)
 {
 	int status;
-
 	FUNC_ENTRY();
 
 	pr_warn("--------gf_init start.--------\n");
