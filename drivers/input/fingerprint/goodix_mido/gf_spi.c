@@ -441,15 +441,14 @@ static int driver_init_partial(struct gf_dev *gf_dev)
 		goto error;
 
 	gf_dev->irq = gf_irq_num(gf_dev);
-	irq_set_status_flags(gf_dev->irq, IRQ_DISABLE_UNLAZY);
-	ret = request_threaded_irq(gf_dev->irq, NULL,
+	ret = devm_request_threaded_irq(&gf_dev->spi->dev,
+					gf_dev->irq,
+					NULL,
 					gf_irq,
-					IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_TH_SCHED_FIFO_HI,
+					IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
 					"gf", gf_dev);
 	if (ret) {
-		irq_clear_status_flags(gf_dev->irq, IRQ_DISABLE_UNLAZY);
-		pr_err("Could not request irq %d\n",
-		       gpio_to_irq(gf_dev->irq_gpio));
+		pr_err("Could not request irq %d\n", gpio_to_irq(gf_dev->irq_gpio));
 		goto error;
 	}
 	if (!ret) {
@@ -535,7 +534,7 @@ static int gf_release(struct inode *inode, struct file *filp)
 
 		gf_dbg("disble_irq. irq = %d\n", gf_dev->irq);
 		gf_disable_irq(gf_dev);
-		free_irq(gf_dev->irq, gf_dev);
+		devm_free_irq(&gf_dev->spi->dev, gf_dev->irq, gf_dev);
 
 		/*power off the sensor*/
 		gf_dev->device_available = 0;
@@ -746,7 +745,6 @@ static int gf_remove(struct platform_device *pdev)
 
 	/* make sure ops on existing fds can abort cleanly */
 	if (gf_dev->irq)
-		irq_clear_status_flags(gf_dev->irq, IRQ_DISABLE_UNLAZY);
 		free_irq(gf_dev->irq, gf_dev);
 
 	if (gf_dev->input != NULL)
