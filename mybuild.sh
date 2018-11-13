@@ -1,5 +1,8 @@
 #!/bin/bash
 
+## Pipefail
+set -o pipefail
+
 ## Parse options
 
 # set defaults
